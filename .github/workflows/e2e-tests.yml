@@ -87,7 +87,7 @@ jobs:
       working-directory: go
     
     - name: Install Playwright browsers
-      run: npx playwright install --with-deps
+      run: npm ci
       working-directory: .
     
     - name: Run E2E tests
