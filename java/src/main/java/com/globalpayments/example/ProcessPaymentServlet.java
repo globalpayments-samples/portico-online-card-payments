@@ -118,10 +118,22 @@ public class ProcessPaymentServlet extends HttpServlet {
             // Validate and extract payment information
             String paymentToken = request.getParameter("payment_token");
             String billingZip = request.getParameter("billing_zip");
+            String amountStr = request.getParameter("amount");
 
-            if (paymentToken == null || billingZip == null || 
-                paymentToken.trim().isEmpty() || billingZip.trim().isEmpty()) {
+            if (paymentToken == null || billingZip == null || amountStr == null ||
+                paymentToken.trim().isEmpty() || billingZip.trim().isEmpty() || amountStr.trim().isEmpty()) {
                 throw new ApiException("Missing required fields");
+            }
+
+            // Validate and parse amount
+            BigDecimal amount;
+            try {
+                amount = new BigDecimal(amountStr);
+                if (amount.compareTo(BigDecimal.ZERO) <= 0) {
+                    throw new ApiException("Amount must be a positive number");
+                }
+            } catch (NumberFormatException e) {
+                throw new ApiException("Invalid amount format");
             }
 
             // Initialize payment data using tokenized card information
@@ -132,8 +144,9 @@ public class ProcessPaymentServlet extends HttpServlet {
             Address address = new Address();
             address.setPostalCode(sanitizePostalCode(billingZip));
 
-            // Process the payment transaction ($10 USD charge)
-            Transaction transaction = card.charge(BigDecimal.valueOf(10.00))
+            // Process the payment transaction using the provided amount
+            Transaction transaction = card.charge(amount)
+                    .withAllowDuplicates(true)
                     .withCurrency("USD")
                     .withAddress(address)
                     .execute();

@@ -1,0 +1,27 @@
+{
+  "name": "card-payments",
+  "version": "1.0.0",
+  "description": "E2E tests for Global Payments SDK implementations",
+  "type": "commonjs",
+  "scripts": {
+    "test": "NODE_OPTIONS='--no-deprecation' playwright test",
+    "test:chrome": "NODE_OPTIONS='--no-deprecation' playwright test --project=chromium",
+    "test:firefox": "NODE_OPTIONS='--no-deprecation' playwright test --project=firefox",
+    "test:webkit": "NODE_OPTIONS='--no-deprecation' playwright test --project=webkit",
+    "test:ci": "NODE_OPTIONS='--no-deprecation' playwright test --reporter=junit",
+    "install:browsers": "playwright install"
+  },
+  "keywords": [
+    "testing",
+    "e2e",
+    "payments"
+  ],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@playwright/test": "^1.39.0"
+  },
+  "dependencies": {
+    "node-fetch": "^2.6.9"
+  }
+}

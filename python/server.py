@@ -94,8 +94,16 @@ def process_payment():
     """
     try:
         # Validate required fields
-        if 'payment_token' not in request.form or 'billing_zip' not in request.form:
+        if 'payment_token' not in request.form or 'billing_zip' not in request.form or 'amount' not in request.form:
             raise ApiException('Missing required fields')
+        
+        # Parse and validate amount
+        try:
+            amount = float(request.form['amount'])
+            if amount <= 0:
+                raise ValueError('Amount must be positive')
+        except (ValueError, TypeError):
+            raise ApiException('Invalid amount')
 
         # Create card data object with the token from client-side tokenization
         card = CreditCardData()
@@ -105,9 +113,10 @@ def process_payment():
         address = Address()
         address.postal_code = sanitize_postal_code(request.form['billing_zip'])
 
-        # Process a $10 USD charge
+        # Process charge with the specified amount
         # Including billing address for additional verification
-        response = card.charge(10)\
+        response = card.charge(amount)\
+            .with_allow_duplicates(True)\
             .with_currency('USD')\
             .with_address(address)\
             .execute()

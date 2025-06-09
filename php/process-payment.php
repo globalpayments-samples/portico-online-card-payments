@@ -74,8 +74,14 @@ configureSdk();
 
 try {
     // Validate required fields
-    if (!isset($_POST['payment_token'], $_POST['billing_zip'])) {
+    if (!isset($_POST['payment_token'], $_POST['billing_zip'], $_POST['amount'])) {
         throw new ApiException('Missing required fields');
+    }
+    
+    // Parse and validate amount
+    $amount = floatval($_POST['amount']);
+    if ($amount <= 0) {
+        throw new ApiException('Invalid amount');
     }
 
     // Initialize payment data using tokenized card information
@@ -86,14 +92,16 @@ try {
     $address = new Address();
     $address->postalCode = sanitizePostalCode($_POST['billing_zip']);
 
-    // Process the payment transaction ($10 USD charge)
-    $response = $card->charge(10)
+    // Process the payment transaction with specified amount
+    $response = $card->charge($amount)
+        ->withAllowDuplicates(true)
         ->withCurrency('USD')
         ->withAddress($address)
         ->execute();
     
     // Verify transaction was successful
     if ($response->responseCode !== '00') {
+        http_response_code(400);
         echo json_encode([
             'success' => false,
             'message' => 'Payment processing failed',

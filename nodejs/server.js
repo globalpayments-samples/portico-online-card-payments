@@ -65,8 +65,14 @@ app.get('/config', (req, res) => {
 app.post('/process-payment', async (req, res) => {
     try {
         // Validate required fields are present
-        if (!req.body.payment_token || !req.body.billing_zip) {
+        if (!req.body.payment_token || !req.body.billing_zip || !req.body.amount) {
             throw new Error('Missing required fields');
+        }
+
+        // Parse and validate amount
+        const amount = parseFloat(req.body.amount);
+        if (isNaN(amount) || amount <= 0) {
+            throw new Error('Invalid amount');
         }
 
         // Initialize payment data using tokenized card information
@@ -77,8 +83,9 @@ app.post('/process-payment', async (req, res) => {
         const address = new Address();
         address.postalCode = sanitizePostalCode(req.body.billing_zip);
 
-        // Process the payment transaction ($10 USD charge)
-        const response = await card.charge(10)
+        // Process the payment transaction with the specified amount
+        const response = await card.charge(amount)
+            .withAllowDuplicates(true)
             .withCurrency('USD')
             .withAddress(address)
             .execute();
@@ -93,6 +100,7 @@ app.post('/process-payment', async (req, res) => {
                     details: response.responseMessage
                 }
             });
+            return;
         }
 
         // Return success response with transaction ID

@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"regexp"
+	"strconv"
 
 	"github.com/globalpayments/go-sdk/api"
 	"github.com/globalpayments/go-sdk/api/entities/base"
@@ -88,10 +89,38 @@ func handlePayment(w http.ResponseWriter, r *http.Request) {
 	// Extract payment information from form
 	paymentToken := r.Form.Get("payment_token")
 	billingZip := r.Form.Get("billing_zip")
+	amountStr := r.Form.Get("amount")
 
 	// Validate required fields are present
-	if paymentToken == "" || billingZip == "" {
-		http.Error(w, "Missing required fields", http.StatusBadRequest)
+	if paymentToken == "" || billingZip == "" || amountStr == "" {
+		w.Header().Set("Content-Type", "application/json")
+		errorResponse := Response{
+			Success: false,
+			Message: "Payment processing failed",
+			Error: &ErrorInfo{
+				Code:    "VALIDATION_ERROR",
+				Details: "Missing required fields",
+			},
+		}
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(errorResponse)
+		return
+	}
+
+	// Validate and parse amount
+	amount, err := strconv.ParseFloat(amountStr, 64)
+	if err != nil || amount <= 0 {
+		w.Header().Set("Content-Type", "application/json")
+		errorResponse := Response{
+			Success: false,
+			Message: "Payment processing failed",
+			Error: &ErrorInfo{
+				Code:    "VALIDATION_ERROR",
+				Details: "Amount must be a positive number",
+			},
+		}
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(errorResponse)
 		return
 	}
 
@@ -101,9 +130,11 @@ func handlePayment(w http.ResponseWriter, r *http.Request) {
 	// Create billing address for AVS verification
 	address := base.NewAddress(sanitizePostalCode(billingZip))
 
-	// Configure the payment transaction ($10 USD charge)
-	val, _ := stringutils.ToDecimalAmount("10.00")
+	// Configure the payment transaction using the provided amount
+	amountStr = strconv.FormatFloat(amount, 'f', 2, 64)
+	val, _ := stringutils.ToDecimalAmount(amountStr)
 	transaction := card.ChargeWithAmount(val)
+	transaction.WithAllowDuplicates(true)
 	transaction.WithCurrency("USD")
 	transaction.WithAddress(address)
 

@@ -102,9 +102,10 @@ public class Program
             var form = await context.Request.ReadFormAsync();
             var billingZip = form["billing_zip"].ToString();
             var token = form["payment_token"].ToString();
+            var amountStr = form["amount"].ToString();
 
             // Validate required fields are present
-            if (string.IsNullOrEmpty(token) || string.IsNullOrEmpty(billingZip))
+            if (string.IsNullOrEmpty(token) || string.IsNullOrEmpty(billingZip) || string.IsNullOrEmpty(amountStr))
             {
                 return Results.BadRequest(new {
                     success = false,
@@ -112,6 +113,19 @@ public class Program
                     error = new {
                         code = "VALIDATION_ERROR",
                         details = "Missing required fields"
+                    }
+                });
+            }
+
+            // Validate and parse amount
+            if (!decimal.TryParse(amountStr, out var amount) || amount <= 0)
+            {
+                return Results.BadRequest(new {
+                    success = false,
+                    message = "Payment processing failed",
+                    error = new {
+                        code = "VALIDATION_ERROR",
+                        details = "Amount must be a positive number"
                     }
                 });
             }
@@ -130,8 +144,9 @@ public class Program
 
             try
             {
-                // Process the payment transaction ($10 USD charge)
-                var response = card.Charge(10m)
+                // Process the payment transaction using the provided amount
+                var response = card.Charge(amount)
+                    .WithAllowDuplicates(true)
                     .WithCurrency("USD")
                     .WithAddress(address)
                     .Execute();
