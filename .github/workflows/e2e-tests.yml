@@ -29,6 +29,7 @@ jobs:
       uses: actions/setup-python@v5
       with:
         python-version: '3.11'
+        cache: 'pip'
     
     # Setup PHP
     - name: Setup PHP
@@ -44,6 +45,7 @@ jobs:
       with:
         distribution: 'temurin'
         java-version: '21'
+        cache: 'maven'
     
     # Setup .NET
     # - name: Setup .NET
@@ -56,11 +58,28 @@ jobs:
       uses: actions/setup-go@v5
       with:
         go-version: '1.23'
+        cache-dependency-path: 'go/go.sum'
     
     # Install Node.js test dependencies
     - name: Install Node.js dependencies
       run: npm ci
       working-directory: nodejs
+    
+    # Cache PHP dependencies
+    - name: Cache PHP dependencies
+      uses: actions/cache@v4
+      with:
+        path: php/vendor
+        key: php-${{ hashFiles('php/composer.lock') }}
+        restore-keys: php-
+    
+    # Cache Playwright browsers
+    - name: Cache Playwright browsers
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/ms-playwright
+        key: playwright-${{ hashFiles('package-lock.json') }}
+        restore-keys: playwright-
     
     # Pre-install dependencies for all implementations to speed up tests
     - name: Install Python dependencies
@@ -87,7 +106,7 @@ jobs:
       working-directory: go
     
     - name: Install Playwright browsers
-      run: npm ci
+      run: npx playwright install --with-deps
       working-directory: .
     
     - name: Run E2E tests
