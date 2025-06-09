@@ -46,10 +46,10 @@ jobs:
         java-version: '21'
     
     # Setup .NET
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: '9.0.x'
+    # - name: Setup .NET
+    #   uses: actions/setup-dotnet@v4
+    #   with:
+    #     dotnet-version: '9.0.x'
     
     # Setup Go
     - name: Setup Go
@@ -78,9 +78,9 @@ jobs:
       run: mvn dependency:resolve
       working-directory: ./online-payments/card-payments/java
     
-    - name: Install .NET dependencies
-      run: dotnet restore
-      working-directory: ./online-payments/card-payments/dotnet
+    # - name: Install .NET dependencies
+    #   run: dotnet restore
+    #   working-directory: ./online-payments/card-payments/dotnet
     
     - name: Install Go dependencies
       run: go mod download
