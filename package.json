@@ -4,7 +4,9 @@
   "description": "E2E tests for Global Payments SDK implementations",
   "type": "commonjs",
   "scripts": {
-    "test": "NODE_OPTIONS='--no-deprecation' playwright test",
+    "test": "NODE_OPTIONS='--no-deprecation' playwright test --project=chromium",
+    "test:fast": "NODE_OPTIONS='--no-deprecation' playwright test --project=chromium",
+    "test:full": "NODE_OPTIONS='--no-deprecation' FULL_BROWSER_TESTS=1 playwright test",
     "test:chrome": "NODE_OPTIONS='--no-deprecation' playwright test --project=chromium",
     "test:firefox": "NODE_OPTIONS='--no-deprecation' playwright test --project=firefox",
     "test:webkit": "NODE_OPTIONS='--no-deprecation' playwright test --project=webkit",

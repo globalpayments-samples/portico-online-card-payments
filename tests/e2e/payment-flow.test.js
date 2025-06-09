@@ -47,13 +47,13 @@ async function forceKillPortProcesses(port) {
   }
 }
 
-async function waitForPortToFree(port, maxWait = 30000) {
+async function waitForPortToFree(port, maxWait = 10000) {
   const startTime = Date.now();
   while (Date.now() - startTime < maxWait) {
     if (await isPortFree(port)) {
       return true;
     }
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    await new Promise(resolve => setTimeout(resolve, 1000));
   }
   
   // If port is still not free, try force killing processes
@@ -94,11 +94,11 @@ async function startServer(impl, serverConfig) {
 
     // Wait for server to be ready
     let retries = 0;
-    const maxRetries = 15;
+    const maxRetries = 10;
     const checkServer = async () => {
       try {
         const response = await fetch(`${serverConfig.url}${serverConfig.configEndpoint}`, {
-          timeout: 10000
+          timeout: 5000
         });
         
         const data = await response.json();
@@ -112,13 +112,13 @@ async function startServer(impl, serverConfig) {
           reject(new Error(`Server failed to start after ${maxRetries} attempts: ${error.message}`));
           return;
         }
-        await new Promise(resolve => setTimeout(resolve, 3000));
+        await new Promise(resolve => setTimeout(resolve, 2000));
         checkServer();
       }
     };
     
-    // Start checking after longer initial delay to let process start
-    setTimeout(checkServer, 5000);
+    // Start checking after initial delay to let process start
+    setTimeout(checkServer, 3000);
 
     // Log all stderr output for debugging
     server.stderr.on('data', (data) => {
@@ -138,7 +138,7 @@ async function stopServer() {
       process.kill(-server.pid, 'SIGTERM');
       
       // Wait a bit for graceful shutdown
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      await new Promise(resolve => setTimeout(resolve, 2000));
       
       // Force kill if still running
       try {
@@ -150,7 +150,7 @@ async function stopServer() {
     }
     
     // Additional wait to ensure port is freed
-    await new Promise(resolve => setTimeout(resolve, 5000));
+    await new Promise(resolve => setTimeout(resolve, 2000));
     server = null;
   }
 }
@@ -160,7 +160,7 @@ async function submitAndWaitForResponse(page) {
   // Create a promise to wait for the response
   const responsePromise = page.waitForResponse(response => 
     response.url().includes('/process-payment'), 
-    { timeout: 60000 }
+    { timeout: 30000 }
   );
 
   // Submit through iframe button
@@ -168,7 +168,7 @@ async function submitAndWaitForResponse(page) {
   const submitButton = submitFrame.locator('button[type="button"]');
   
   // Wait for button to be ready
-  await submitButton.waitFor({ state: 'visible', timeout: 30000 });
+  await submitButton.waitFor({ state: 'visible', timeout: 15000 });
   
   // Log that we're about to click
   await submitButton.click();
@@ -193,11 +193,11 @@ async function fillPaymentForm(page, testData) {
   ];
 
   for (const selector of iframeSelectors) {
-    await page.waitForSelector(selector, { timeout: 30000 });
+    await page.waitForSelector(selector, { timeout: 15000 });
   }
 
   // Additional wait for iframe content to load
-  await page.waitForTimeout(2000);
+  await page.waitForTimeout(1000);
 
   const cardNumberFrame = page.frameLocator('iframe[id*="card-number"]').first();
   await cardNumberFrame.locator('input[id*="field"]').fill(testData.validCard.number);

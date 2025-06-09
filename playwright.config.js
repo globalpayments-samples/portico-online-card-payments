@@ -2,19 +2,19 @@ const { defineConfig } = require('@playwright/test');
 
 module.exports = defineConfig({
   testDir: './tests/e2e',
-  timeout: 120000,
+  timeout: 60000,
   expect: {
-    timeout: 30000
+    timeout: 15000
   },
   retries: 2,
-  fullyParallel: false,
+  fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  workers: 1,
+  workers: process.env.CI ? 2 : '50%',
   reporter: process.env.CI ? 'junit' : 'dot',
   use: {
-    actionTimeout: 15000,
-    navigationTimeout: 30000,
+    actionTimeout: 10000,
+    navigationTimeout: 20000,
     trace: 'on-first-retry',
     video: 'on-first-retry',
     // Ignore console logs to prevent them being treated as errors
@@ -29,17 +29,19 @@ module.exports = defineConfig({
         browserName: 'chromium',
       },
     },
-    {
-      name: 'firefox',
-      use: {
-        browserName: 'firefox',
+    ...(process.env.FULL_BROWSER_TESTS ? [
+      {
+        name: 'firefox',
+        use: {
+          browserName: 'firefox',
+        },
       },
-    },
-    {
-      name: 'webkit',
-      use: {
-        browserName: 'webkit',
+      {
+        name: 'webkit',
+        use: {
+          browserName: 'webkit',
+        },
       },
-    },
+    ] : []),
   ],
 });

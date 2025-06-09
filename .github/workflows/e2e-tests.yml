@@ -12,27 +12,91 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [16.x]
+        node-version: [18.x]
 
     steps:
     - uses: actions/checkout@v3
     
+    # Setup Node.js
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v3
       with:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
     
-    - name: Install dependencies
+    # Setup Python
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    # Setup PHP
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.3'
+        extensions: mbstring, xml, ctype, iconv, intl
+        tools: composer:v2
+    
+    # Setup Java
+    - name: Setup Java
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'temurin'
+        java-version: '21'
+    
+    # Setup .NET
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: '9.0.x'
+    
+    # Setup Go
+    - name: Setup Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.23'
+    
+    # Install Node.js test dependencies
+    - name: Install Node.js dependencies
       run: npm ci
+      working-directory: ./online-payments/card-payments
+    
+    # Pre-install dependencies for all implementations to speed up tests
+    - name: Install Python dependencies
+      run: |
+        python -m venv venv
+        source venv/bin/activate
+        pip install -r requirements.txt
+      working-directory: ./online-payments/card-payments/python
+    
+    - name: Install PHP dependencies
+      run: composer install
+      working-directory: ./online-payments/card-payments/php
+    
+    - name: Install Java dependencies
+      run: mvn dependency:resolve
+      working-directory: ./online-payments/card-payments/java
+    
+    - name: Install .NET dependencies
+      run: dotnet restore
+      working-directory: ./online-payments/card-payments/dotnet
+    
+    - name: Install Go dependencies
+      run: go mod download
+      working-directory: ./online-payments/card-payments/go
     
     - name: Install Playwright browsers
       run: npx playwright install --with-deps
+      working-directory: ./online-payments/card-payments
     
     - name: Run E2E tests
       run: npm run test:ci
+      working-directory: ./online-payments/card-payments
       env:
         CI: true
+        PUBLIC_API_KEY: ${{ vars.PUBLIC_API_KEY }}
+        SECRET_API_KEY: ${{ vars.SECRET_API_KEY }}
     
     - name: Upload test results
       if: always()
@@ -40,7 +104,7 @@ jobs:
       with:
         name: playwright-report
         path: |
-          playwright-report/
-          test-results/
+          online-payments/card-payments/playwright-report/
+          online-payments/card-payments/test-results/
         retention-days: 30
         overwrite: true
