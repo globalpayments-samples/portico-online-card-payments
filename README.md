@@ -53,6 +53,26 @@ Each implementation includes:
 - Basic run script (run.sh)
 - Test page for payment submission
 
+## E2E Testing
+
+The project includes comprehensive end-to-end tests that verify all implementations:
+
+```bash
+# Run all tests
+npm test
+
+# Test specific implementations
+npm run test:nodejs
+npm run test:php
+npm run test:python
+npm run test:java
+npm run test:go
+npm run test:dotnet
+
+# Setup environment
+npm run setup
+```
+
 ## Security Notes
 
 These examples demonstrate basic implementation patterns and should be enhanced for production use with:

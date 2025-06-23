@@ -15,18 +15,20 @@
     "test:php": "IMPLEMENTATION_FILTER=php playwright test", 
     "test:java": "IMPLEMENTATION_FILTER=java playwright test",
     "test:go": "IMPLEMENTATION_FILTER=go playwright test",
+    "test:dotnet": "IMPLEMENTATION_FILTER=dotnet playwright test",
     
     "test:single": "playwright test --workers=1",
     "test:verbose": "playwright test --reporter=list",
     
     "setup": "npm ci && npx playwright install chromium",
     "setup:env": "./setup-env.sh",
-    "setup:all": "npm run setup:nodejs && npm run setup:php && npm run setup:python && npm run setup:java && npm run setup:go",
+    "setup:all": "npm run setup:nodejs && npm run setup:php && npm run setup:python && npm run setup:java && npm run setup:go && npm run setup:dotnet",
     "setup:nodejs": "cd nodejs && npm ci",
     "setup:php": "cd php && composer install --no-dev",
     "setup:python": "cd python && python -m venv venv && source venv/bin/activate && pip install -r requirements.txt",
     "setup:java": "cd java && mvn clean install -DskipTests",
     "setup:go": "cd go && go mod download",
+    "setup:dotnet": "cd dotnet && dotnet restore",
     
     "serve:report": "npx playwright show-report",
     "cleanup": "rm -rf test-results playwright-report junit.xml",

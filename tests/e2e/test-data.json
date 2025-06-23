@@ -35,6 +35,11 @@
       "command": "cd go && go run main.go",
       "url": "http://127.0.0.1:8000",
       "configEndpoint": "/config"
+    },
+    "dotnet": {
+      "command": "cd dotnet && dotnet run",
+      "url": "http://127.0.0.1:8000",
+      "configEndpoint": "/config"
     }
   }
 }

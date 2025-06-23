@@ -22,6 +22,7 @@ on:
           - 'python'
           - 'java'
           - 'go'
+          - 'dotnet'
 
 env:
   NODE_VERSION: '18'
@@ -29,6 +30,7 @@ env:
   PHP_VERSION: '8.3'
   JAVA_VERSION: '21'
   GO_VERSION: '1.23'
+  DOTNET_VERSION: '9.0.x'
 
 jobs:
   test:
@@ -37,7 +39,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        implementation: [nodejs, php, python, java, go]
+        implementation: [nodejs, php, python, java, go, dotnet]
     
     steps:
     - name: Checkout code
@@ -76,6 +78,12 @@ jobs:
       with:
         go-version: ${{ env.GO_VERSION }}
     
+    - name: Setup .NET
+      if: matrix.implementation == 'dotnet'
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+    
     - name: Install test dependencies
       run: npm ci
       
@@ -103,6 +111,7 @@ jobs:
             ;;
           java) mvn clean compile -DskipTests ;;
           go) go mod download ;;
+          dotnet) dotnet restore ;;
         esac
     
     - name: Run E2E tests
