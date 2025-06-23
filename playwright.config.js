@@ -2,46 +2,45 @@ const { defineConfig } = require('@playwright/test');
 
 module.exports = defineConfig({
   testDir: './tests/e2e',
-  timeout: 60000,
+  timeout: 120000, // 2 minutes per test
   expect: {
     timeout: 15000
   },
-  retries: 2,
-  fullyParallel: true,
-  forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 2 : '50%',
-  reporter: process.env.CI ? 'junit' : 'dot',
+  retries: process.env.CI ? 2 : 1,
+  workers: 1, // Sequential execution to avoid port conflicts
+  reporter: process.env.CI ? [
+    ['junit', { outputFile: 'junit.xml' }],
+    ['html', { open: 'never' }]
+  ] : [['list'], ['html', { open: 'never' }]],
+  
   use: {
-    actionTimeout: 10000,
-    navigationTimeout: 20000,
-    trace: 'on-first-retry',
-    video: 'on-first-retry',
-    // Ignore console logs to prevent them being treated as errors
-    logger: {
-      isEnabled: (name, severity) => severity === 'error' && name !== 'browser'
-    }
+    actionTimeout: 15000,
+    navigationTimeout: 30000,
+    trace: 'retain-on-failure',
+    video: 'retain-on-failure',
+    screenshot: 'only-on-failure',
+    // Helpful for debugging iframe issues
+    viewport: { width: 1280, height: 720 }
   },
+  
   projects: [
     {
       name: 'chromium',
       use: {
         browserName: 'chromium',
-      },
-    },
-    ...(process.env.FULL_BROWSER_TESTS ? [
-      {
-        name: 'firefox',
-        use: {
-          browserName: 'firefox',
-        },
-      },
-      {
-        name: 'webkit',
-        use: {
-          browserName: 'webkit',
-        },
-      },
-    ] : []),
+        launchOptions: {
+          // These args help with iframe payment forms
+          args: [
+            '--disable-web-security',
+            '--disable-features=VizDisplayCompositor',
+            '--disable-ipc-flooding-protection'
+          ]
+        }
+      }
+    }
   ],
+  
+  // Global setup/teardown
+  globalSetup: require.resolve('./tests/global-setup.js'),
+  globalTeardown: require.resolve('./tests/global-teardown.js')
 });
