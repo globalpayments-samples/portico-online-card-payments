@@ -13,27 +13,27 @@
   "testServers": {
     "nodejs": {
       "command": "cd nodejs && npm start",
-      "url": "http://localhost:8000",
+      "url": "http://127.0.0.1:8000",
       "configEndpoint": "/config"
     },
     "python": {
       "command": "cd python && ./run.sh", 
-      "url": "http://localhost:8000",
+      "url": "http://127.0.0.1:8000",
       "configEndpoint": "/config"
     },
     "php": {
       "command": "cd php && php -S 0.0.0.0:8000",
-      "url": "http://localhost:8000", 
+      "url": "http://127.0.0.1:8000", 
       "configEndpoint": "/config.php"
     },
     "java": {
       "command": "cd java && mvn clean package cargo:run",
-      "url": "http://localhost:8000",
+      "url": "http://127.0.0.1:8000",
       "configEndpoint": "/config"
     },
     "go": {
       "command": "cd go && go run main.go",
-      "url": "http://localhost:8000",
+      "url": "http://127.0.0.1:8000",
       "configEndpoint": "/config"
     }
   }

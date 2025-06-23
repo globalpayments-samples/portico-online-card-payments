@@ -130,11 +130,21 @@ async function startServer(impl, serverConfig) {
     let retries = 0;
     const maxRetries = 15; // Increased from 10
     
-    const checkServer = async () => {
+const checkServer = async () => {
+  try {
+    console.log(`🔍 Health check ${retries + 1}/${maxRetries} for ${impl}...`);
+    
+    // Try IPv4 first, then IPv6 if that fails
+    const urls = [
+      `http://127.0.0.1:8000${serverConfig.configEndpoint}`,
+      `http://[::1]:8000${serverConfig.configEndpoint}`,
+      `${serverConfig.url}${serverConfig.configEndpoint}`
+    ];
+    
+    let lastError;
+    for (const url of urls) {
       try {
-        console.log(`🔍 Health check ${retries + 1}/${maxRetries} for ${impl}...`);
-        
-        const response = await fetch(`${serverConfig.url}${serverConfig.configEndpoint}`, {
+        const response = await fetch(url, {
           timeout: 5000,
           headers: { 'User-Agent': 'Playwright-Test-Health-Check' }
         });
@@ -145,29 +155,38 @@ async function startServer(impl, serverConfig) {
         
         const data = await response.json();
         if (data.success && data.data && data.data.publicApiKey) {
-          console.log(`✅ ${impl} server is ready!`);
+          console.log(`✅ ${impl} server is ready at ${url}!`);
           resolve(server);
           return;
         }
         
         throw new Error('Server not fully initialized - missing publicApiKey');
       } catch (error) {
-        console.log(`⚠️  Health check failed for ${impl}: ${error.message}`);
-        
-        if (++retries === maxRetries) {
-          console.error(`❌ ${impl} server failed to start after ${maxRetries} attempts`);
-          console.error(`📋 Server output:`, serverOutput);
-          console.error(`📋 Server errors:`, serverErrors);
-          reject(new Error(`Server failed to start: ${error.message}`));
-          return;
-        }
-        
-        // Progressive backoff
-        const delay = Math.min(2000 + (retries * 300), 4000);
-        await new Promise(resolve => setTimeout(resolve, delay));
-        checkServer();
+        lastError = error;
+        console.log(`⚠️  Failed to connect to ${url}: ${error.message}`);
+        continue; // Try next URL
       }
-    };
+    }
+    
+    // If we get here, all URLs failed
+    throw lastError;
+  } catch (error) {
+    console.log(`⚠️  Health check failed for ${impl}: ${error.message}`);
+    
+    if (++retries === maxRetries) {
+      console.error(`❌ ${impl} server failed to start after ${maxRetries} attempts`);
+      console.error(`📋 Server output:`, serverOutput);
+      console.error(`📋 Server errors:`, serverErrors);
+      reject(new Error(`Server failed to start: ${error.message}`));
+      return;
+    }
+    
+    // Progressive backoff
+    const delay = Math.min(2000 + (retries * 300), 4000);
+    await new Promise(resolve => setTimeout(resolve, delay));
+    checkServer();
+  }
+};
     
     // Start checking after initial delay
     setTimeout(checkServer, 3000);

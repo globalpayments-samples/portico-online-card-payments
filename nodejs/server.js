@@ -144,4 +144,5 @@ app.post('/process-payment', async (req, res) => {
 app.listen(port, '0.0.0.0', () => {
     console.log(`Server running at http://localhost:${port}`);
     console.log(`Server also accessible at http://127.0.0.1:${port}`);
+    console.log(`Server also accessible at http://0.0.0.0:${port}`);
 });
