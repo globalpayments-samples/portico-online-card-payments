@@ -14,7 +14,7 @@ RUN apt-get update && \
     zip \
     dom \
     curl \
-    mbstring \
+    intl \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Composer

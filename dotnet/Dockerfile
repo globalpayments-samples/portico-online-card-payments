@@ -19,7 +19,7 @@ WORKDIR /app
 COPY --from=builder /app/out .
 
 # Create non-root user
-RUN useradd --create-home --shell /bin/bash app
+# RUN useradd --create-home --shell /bin/bash app
 USER app
 
 EXPOSE 8000
