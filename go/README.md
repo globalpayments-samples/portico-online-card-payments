@@ -109,3 +109,23 @@ This example demonstrates basic implementation. For production use, consider:
 - Setting appropriate security headers
 - Proper error handling and logging
 - Input validation and sanitization
+
+---
+
+## Troubleshooting
+
+| Issue | Solution |
+|-------|----------|
+| `go` command not found | Install Go 1.21+. Run `go version` to check |
+| Module download fails | Run `go mod tidy` to resolve dependencies |
+| Port already in use | Change port in source or set `PORT` environment variable |
+| `.env` not loading | Verify `.env` file exists in the language directory (not project root) |
+
+---
+
+## Resources
+
+- [Parent Project README](../README.md)
+- [Global Payments Developer Portal](https://developer.globalpayments.com/)
+- [API Reference](https://developer.globalpayments.com/api/references-overview)
+- [Test Cards](https://developer.globalpayments.com/resources/test-cards)
