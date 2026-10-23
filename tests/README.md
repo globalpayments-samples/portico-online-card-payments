@@ -104,7 +104,7 @@ GitHub Actions workflow is configured to:
   - Go: Go 1.23+
   - Java: JDK 21+
   - Python: Python 3.11+
-  - PHP: PHP 8.3+
+  - PHP: PHP 8.3.36+
 - Correct environment variables (see .env.sample files)
 
 ## Adding New Tests
