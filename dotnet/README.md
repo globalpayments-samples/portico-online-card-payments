@@ -4,7 +4,7 @@ This example demonstrates card payment processing using ASP.NET Core and the Glo
 
 ## Requirements
 
-- .NET 6.0 or later
+- .NET 10.0 or later
 - Global Payments account and API credentials
 
 ## Project Structure

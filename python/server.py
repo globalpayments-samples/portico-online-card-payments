@@ -15,15 +15,21 @@ License: MIT
 
 import os
 import re
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from dotenv import load_dotenv
 from globalpayments.api import PorticoConfig, ServicesContainer
 from globalpayments.api.payment_methods import CreditCardData
 from globalpayments.api.entities import Address
 from globalpayments.api.entities.exceptions import ApiException
 
+# Load environment variables from the .env file
+load_dotenv()
+
 # Initialize application
-app = Flask(__name__, static_folder='.')
+app = Flask(__name__, static_folder=None)
+
+# Folder that holds index.html; only that page is served, never the server's own files
+FRONTEND_DIR = os.path.dirname(os.path.abspath(__file__))
 
 def configure_sdk():
     """
@@ -62,7 +68,7 @@ def sanitize_postal_code(postal_code: str) -> str:
 @app.route('/')
 def index():
     """Serve the main payment form HTML page."""
-    return app.send_static_file('index.html')
+    return send_from_directory(FRONTEND_DIR, 'index.html')
 
 @app.route('/config')
 def get_config():
@@ -80,6 +86,17 @@ def get_config():
         }
     })
 
+def api_error(details):
+    """Build the 400 response used for rejected payment requests."""
+    return jsonify({
+        'success': False,
+        'message': 'Payment processing failed',
+        'error': {
+            'code': 'API_ERROR',
+            'details': details
+        }
+    }), 400
+
 @app.route('/process-payment', methods=['POST'])
 def process_payment():
     """
@@ -95,15 +112,15 @@ def process_payment():
     try:
         # Validate required fields
         if 'payment_token' not in request.form or 'billing_zip' not in request.form or 'amount' not in request.form:
-            raise ApiException('Missing required fields')
+            return api_error('Missing required fields')
         
         # Parse and validate amount
         try:
             amount = float(request.form['amount'])
-            if amount <= 0:
-                raise ValueError('Amount must be positive')
         except (ValueError, TypeError):
-            raise ApiException('Invalid amount')
+            return api_error('Invalid amount')
+        if amount <= 0:
+            return api_error('Invalid amount')
 
         # Create card data object with the token from client-side tokenization
         card = CreditCardData()
@@ -141,27 +158,21 @@ def process_payment():
             }
         })
     except ApiException as e:
-        # Handle API-specific exceptions and return error response
-        return jsonify({
-            'success': False,
-            'message': 'Payment processing failed',
-            'error': {
-                'code': 'API_ERROR',
-                'details': str(e)
-            }
-        }), 400
-    except Exception as e:
-        # Handle general errors
+        # Return the gateway's own message so the reason for the rejection is visible
+        return api_error(str(e))
+    except Exception:
+        # Log unexpected errors on the server and return a generic message
+        app.logger.exception('Unexpected error while processing payment')
         return jsonify({
             'success': False,
             'message': 'Internal server error',
             'error': {
                 'code': 'SERVER_ERROR',
-                'details': str(e)
+                'details': 'An unexpected error occurred'
             }
         }), 500
 
 # Start the server if this file is run directly
 if __name__ == '__main__':
     port = int(os.getenv('PORT', 8000))
-    app.run(host='0.0.0.0', port=port, debug=True)  # Running in debug mode for development
+    app.run(host='0.0.0.0', port=port, debug=os.environ.get("FLASK_DEBUG") == "1")

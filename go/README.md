@@ -4,7 +4,7 @@ This example demonstrates card payment processing using Go and the Global Paymen
 
 ## Requirements
 
-- Go 1.21 or later
+- Go 1.26 or later
 - Global Payments account and API credentials
 
 ## Project Structure
@@ -116,7 +116,7 @@ This example demonstrates basic implementation. For production use, consider:
 
 | Issue | Solution |
 |-------|----------|
-| `go` command not found | Install Go 1.21+. Run `go version` to check |
+| `go` command not found | Install Go 1.26+. Run `go version` to check |
 | Module download fails | Run `go mod tidy` to resolve dependencies |
 | Port already in use | Change port in source or set `PORT` environment variable |
 | `.env` not loading | Verify `.env` file exists in the language directory (not project root) |
