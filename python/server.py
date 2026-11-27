@@ -20,7 +20,7 @@ from dotenv import load_dotenv
 from globalpayments.api import PorticoConfig, ServicesContainer
 from globalpayments.api.payment_methods import CreditCardData
 from globalpayments.api.entities import Address
-from globalpayments.api.entities.exceptions import ApiException
+from globalpayments.api.entities.exceptions import ApiException, GatewayException
 
 # Load environment variables from the .env file
 load_dotenv()
@@ -85,6 +85,12 @@ def get_config():
             'publicApiKey': os.getenv('PUBLIC_API_KEY')
         }
     })
+
+def gateway_reason(e):
+    """Return the gateway's response code and message, never the exception text."""
+    code = e.response_code if isinstance(e.response_code, str) else ''
+    message = e.response_message if isinstance(e.response_message, str) else ''
+    return f'{code} {message}'.strip() or 'The gateway declined the request'
 
 def api_error(details):
     """Build the 400 response used for rejected payment requests."""
@@ -157,9 +163,14 @@ def process_payment():
                 'transactionId': response.transaction_id
             }
         })
-    except ApiException as e:
-        # Return the gateway's own message so the reason for the rejection is visible
-        return api_error(str(e))
+    except GatewayException as e:
+        # Pass back the gateway's response code and message so the reason for the rejection is visible
+        app.logger.warning('Gateway rejected the payment: %s', e)
+        return api_error(gateway_reason(e))
+    except ApiException:
+        # SDK errors stay in the server log, the page gets a generic message
+        app.logger.exception('Payment request failed')
+        return api_error('The payment request could not be processed')
     except Exception:
         # Log unexpected errors on the server and return a generic message
         app.logger.exception('Unexpected error while processing payment')
