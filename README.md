@@ -47,7 +47,7 @@ The fastest way to get all implementations running is using Docker:
 
 ```bash
 # 1. Setup environment
-cp .env.sample .env
+cp nodejs/.env.sample .env
 # Edit .env with your actual API keys
 
 # 2. Make the management script executable

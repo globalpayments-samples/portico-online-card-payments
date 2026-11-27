@@ -127,7 +127,7 @@ This example demonstrates basic implementation. For production use, consider:
 | Issue | Solution |
 |-------|----------|
 | `pip install` fails | Ensure Python 3.7+ is installed. Run `python3 --version` to check |
-| Port already in use | Change port: `python server.py --port 8001` or edit `server.py` |
+| Port already in use | Change port: `PORT=8001 python server.py` or set `PORT` in `.env` |
 | `.env` not loading | Verify `.env` file exists in the language directory (not project root) |
 | Module not found errors | Activate virtual environment and run `pip install -r requirements.txt` |
 

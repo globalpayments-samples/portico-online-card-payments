@@ -113,9 +113,9 @@ This example demonstrates basic implementation. For production use, consider:
 
 | Issue | Solution |
 |-------|----------|
-| `dotnet` command not found | Install .NET SDK 6.0+. Run `dotnet --version` to check |
+| `dotnet` command not found | Install .NET SDK 10.0+. Run `dotnet --version` to check |
 | Build fails | Run `dotnet restore` before `dotnet run` |
-| Port already in use | Set a different port in `launchSettings.json` or use `--urls` flag |
+| Port already in use | Set `PORT` in `.env` or the environment, for example `PORT=8001 dotnet run` |
 | `.env` not loading | Verify `.env` file exists in the language directory (not project root) |
 
 ---

@@ -36,7 +36,7 @@ This example demonstrates card payment processing using Jakarta EE and the Globa
    ```
    Or manually:
    ```bash
-   mvn jetty:run
+   mvn clean package cargo:run
    ```
 
 ## Implementation Details

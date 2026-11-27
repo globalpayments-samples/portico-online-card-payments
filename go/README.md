@@ -30,7 +30,7 @@ This example demonstrates card payment processing using Go and the Global Paymen
    ```bash
    go run main.go
    ```
-   The server will start on http://localhost:8888
+   The server will start on http://localhost:8000
 
 ## Implementation Details
 
