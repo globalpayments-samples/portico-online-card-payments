@@ -98,6 +98,19 @@ public class Program
     {
         app.MapPost("/process-payment", async (HttpContext context) =>
         {
+            // The page posts a form; anything else gets a JSON error instead of a crash
+            if (!context.Request.HasFormContentType)
+            {
+                return Results.BadRequest(new {
+                    success = false,
+                    message = "Payment processing failed",
+                    error = new {
+                        code = "VALIDATION_ERROR",
+                        details = "Missing required fields"
+                    }
+                });
+            }
+
             // Parse form data from the request
             var form = await context.Request.ReadFormAsync();
             var billingZip = form["billing_zip"].ToString();
