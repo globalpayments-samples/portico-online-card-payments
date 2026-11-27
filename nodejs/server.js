@@ -54,6 +54,20 @@ const sanitizePostalCode = (postalCode) => {
 };
 
 /**
+ * Send a 400 response for a request that failed validation
+ */
+const validationError = (res, details) => {
+    res.status(400).json({
+        success: false,
+        message: 'Payment processing failed',
+        error: {
+            code: 'VALIDATION_ERROR',
+            details
+        }
+    });
+};
+
+/**
  * Config endpoint - provides public API key for client-side tokenization
  */
 app.get('/config', (req, res) => {
@@ -73,13 +87,13 @@ app.post('/process-payment', async (req, res) => {
     try {
         // Validate required fields are present
         if (!req.body.payment_token || !req.body.billing_zip || !req.body.amount) {
-            throw new Error('Missing required fields');
+            return validationError(res, 'Missing required fields');
         }
 
         // Parse and validate amount
         const amount = parseFloat(req.body.amount);
         if (isNaN(amount) || amount <= 0) {
-            throw new Error('Invalid amount');
+            return validationError(res, 'Invalid amount');
         }
 
         // Initialize payment data using tokenized card information
@@ -119,31 +133,28 @@ app.post('/process-payment', async (req, res) => {
             }
         });
     } catch (error) {
-        // Handle different types of errors appropriately
-        switch (error.name) {
-            case ApiError.constructor.name:
-                // Handle API-specific errors
-                res.status(400).json({
-                    success: false,
-                    message: 'Payment processing failed',
-                    error: {
-                        code: 'API_ERROR',
-                        details: error.message
-                    }
-                });
-                break;
-            default:
-                // Handle general errors
-                res.status(500).json({
-                    success: false,
-                    message: 'Internal server error',
-                    error: {
-                        code: 'SERVER_ERROR',
-                        details: error.message
-                    }
-                });
-                break;
+        // Gateway and SDK errors (GatewayError and friends extend ApiError)
+        if (error instanceof ApiError) {
+            res.status(400).json({
+                success: false,
+                message: 'Payment processing failed',
+                error: {
+                    code: 'API_ERROR',
+                    details: error.message
+                }
+            });
+            return;
         }
+
+        // Handle general errors
+        res.status(500).json({
+            success: false,
+            message: 'Internal server error',
+            error: {
+                code: 'SERVER_ERROR',
+                details: error.message
+            }
+        });
     }
 });
 
