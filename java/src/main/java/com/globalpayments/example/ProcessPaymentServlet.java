@@ -80,6 +80,8 @@ public class ProcessPaymentServlet extends HttpServlet {
             publicKey
         );
         response.getWriter().write(jsonResponse);
+        } else {
+            response.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
         }
     }
 
