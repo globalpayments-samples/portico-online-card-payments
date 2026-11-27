@@ -6,6 +6,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"log"
 	"net/http"
 	"os"
@@ -15,6 +16,7 @@ import (
 	"github.com/globalpayments/go-sdk/api"
 	"github.com/globalpayments/go-sdk/api/entities/base"
 	"github.com/globalpayments/go-sdk/api/entities/transactions"
+	"github.com/globalpayments/go-sdk/api/gateways"
 	"github.com/globalpayments/go-sdk/api/paymentmethods"
 	"github.com/globalpayments/go-sdk/api/serviceconfigs"
 	"github.com/globalpayments/go-sdk/api/utils/stringutils"
@@ -140,6 +142,22 @@ func handlePayment(w http.ResponseWriter, r *http.Request) {
 
 	ctx := context.Background()
 	response, err := api.ExecuteGateway[transactions.Transaction](ctx, transaction)
+	var gatewayErr *gateways.GatewayResponseError
+	if errors.As(err, &gatewayErr) {
+		// The gateway rejected the request (bad or used token and so on)
+		w.Header().Set("Content-Type", "application/json")
+		errorResponse := Response{
+			Success: false,
+			Message: "Payment processing failed",
+			Error: &ErrorInfo{
+				Code:    "API_ERROR",
+				Details: gatewayErr.Error(),
+			},
+		}
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(errorResponse)
+		return
+	}
 	if err != nil {
 		w.Header().Set("Content-Type", "application/json")
 		errorResponse := Response{
